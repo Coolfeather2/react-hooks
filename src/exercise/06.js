@@ -10,6 +10,7 @@ import {
 } from '../pokemon'
 
 function PokemonInfo({pokemonName}) {
+  const [status, setStatus] = React.useState('idle')
   const [pokemon, setPokemon] = React.useState(null)
   const [error, setError] = React.useState(null)
 
@@ -17,27 +18,53 @@ function PokemonInfo({pokemonName}) {
     if (!pokemonName) {
       return
     }
-    setPokemon(null)
+    setStatus('pending')
     fetchPokemon(pokemonName)
-      .then(pokemonData => setPokemon(pokemonData))
-      .catch(error => setError(error))
+      .then(pokemonData => {
+        setPokemon(pokemonData)
+        setStatus('resolved')
+      })
+      .catch(error => {
+        setError(error)
+        setStatus('rejected')
+      })
   }, [pokemonName])
 
-  if (error) {
-    return (
-      <div role="alert">
-        There was an error:{' '}
-        <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
-      </div>
-    )
+  switch (status) {
+    case 'idle':
+      return 'Submit a pokemon'
+    case 'pending':
+      return <PokemonInfoFallback name={pokemonName} />
+    case 'resolved':
+      return <PokemonDataView pokemon={pokemon} />
+    case 'rejected':
+      return (
+        <div role="alert">
+          There was an error:{' '}
+          <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+        </div>
+      )
+    default:
+      return 'Submit a pokemon'
   }
-  else if (!pokemonName) {
-    return 'Submit a pokemon'
-  } else if (!pokemon) {
-    return <PokemonInfoFallback name={pokemonName} />
-  } else {
-    return <PokemonDataView pokemon={pokemon} />
-  }
+
+  // if (status === 'idle') {
+  //   return 'Submit a pokemon'
+  // }
+  // else if (status === 'pending') {
+  //   return <PokemonInfoFallback name={pokemonName} />
+  // }
+  // else if (status === 'resolved') {
+  //   return <PokemonDataView pokemon={pokemon} />
+  // }
+  // else if (status === 'rejected') {
+  //   return (
+  //     <div role="alert">
+  //       There was an error:{' '}
+  //       <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+  //     </div>
+  //   )
+  // }
 }
 
 function App() {
